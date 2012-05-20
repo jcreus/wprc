@@ -1,0 +1,117 @@
+<html>
+<head>
+<script src="http://portatil-acer:3141/socket.io/socket.io.js"></script>
+<script src="wiki2html.js"></script>
+<script type="text/javascript"> 
+// {page: page, mods: mods, url: durl, user: user, chan: chan, desc: desc}
+window.addEventListener('load', function () {
+	var table = document.getElementById("table");
+	var socket = io.connect('http://portatil-acer:3141');
+	var begin = new Date().getTime();
+	var last = undefined;
+	var edits = 0;
+	var paused = false;
+	socket.on('edit', function (a) {
+		edits++;
+		if (paused) return;
+		var tr = document.createElement('tr');
+		var chancolor = 'gray';
+		a.chan = a.chan.split(/\s/).join('');
+		if (a.chan.indexOf("+") != -1) {
+			chancolor = 'green';
+		}
+		else if (a.chan.indexOf("-") != -1) {
+			chancolor = 'red';
+		}
+		var hide = document.getElementById("checked").checked;
+		var hidebot = document.getElementById("checked2").checked;
+		var isip = (a.user.match(/(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])/) != null);
+		if (hide && !isip) return;
+		if (hidebot && a.mods.indexOf("B") != -1) return;
+		tr.innerHTML = '<td><a target="_blank" href="'+a.url+'">'+a.page+'</a></td><td><a target="_blank" href="http://en.wikipedia.org/wiki/User:'+a.user+'">'+a.user+'</a></td><td>'+wiki2html(a.desc)+'</td><td style="color:'+chancolor+'">'+a.chan+'</td>';
+		if (last) table.insertBefore(tr, last);
+		else table.appendChild(tr);
+		last = tr;
+	});
+	window.playpause = function (e) {
+		paused = !paused;
+		e.src = (paused) ? 'play.png' : 'pause.png';
+	}
+});
+</script>
+<style type="text/css">
+body {
+	font-family:sans-serif;
+}
+table#table {
+	width:80%;
+	margin:0 auto;
+	border-collapse:collapse;
+	border:1px solid gray;
+}
+table#table td, table#table th {
+	border:1px solid gray;
+	padding:3px;
+}
+table#table th {
+	background:lightgray;
+}
+table#table tr td:nth-child(1) {
+	width:35%;
+}
+table#table tr td:nth-child(2) {
+	width:15%;
+}
+table#table tr td:nth-child(4) {
+	width:50px;
+	text-align:center;
+}
+div#opmenu {
+	position:fixed;
+	bottom:0px;
+	right:0px;
+}
+div#opmenu button {
+	border:1px solid gray;
+	background:lightgray;
+	padding:5px;
+}
+div#options {
+	width:80%;
+	left:10%;
+	bottom:10px;
+	padding:10px;
+	border-radius:5px;
+	background:white;
+	position:fixed;
+	border:1px solid gray;
+}
+#pp2 {
+	position:fixed;
+	right:10px;
+	top:10px;
+}
+#opmenu, #pp2 {
+	cursor:pointer;
+}
+</style>
+</head>
+<body>
+<table id="table">
+<tr>
+<th>Page</th>
+<th>User</th>
+<th>Comment</th>
+<th>+/-</th>
+</tr>
+</table>
+<div id="options">
+<p>Hide non-IP edits: <input type="checkbox" id="checked"></p>
+<p>Hide bot edits: <input type="checkbox" id="checked2" checked></p>
+</div>
+<img id="pp2" src="pause.png" onclick="playpause(this)">
+<div id="opmenu">
+<button onclick="javascript:var el=document.getElementById('options');el.style.display = (el.style.display =='none') ? 'block' : 'none';">Options</button>
+</div>
+</body>
+</html>
